@@ -1,0 +1,1 @@
+var lambApp = angular.module('lambApp', ['mainCtrl', 'lambService']); 
