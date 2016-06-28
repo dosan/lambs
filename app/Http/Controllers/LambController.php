@@ -8,20 +8,36 @@ use App\Models\Lambs;
 use App\Models\Time;
 use App\Http\Requests;
 use Log;
+use DB;
 class LambController extends Controller
 {
+
+	public function initialize(){
+		$dbh = new \PDO('mysql:host='.\Config::get('database.connections.mysql.host').';dbname='.\Config::get('database.connections.mysql.database'), \Config::get('database.connections.mysql.username'), \Config::get('database.connections.mysql.password'));
+		$stmt=$dbh->prepare("DELETE FROM `lambs`"); $stmt->execute();
+		$stmt=$dbh->prepare("ALTER TABLE `lambs` AUTO_INCREMENT = 1"); $stmt->execute();
+		$stmt = $dbh->prepare("INSERT INTO `lambs` (`id`, `birth_day`, `death_day`, `corral_id`) 
+			VALUES(1, 1, 0, 0),(2, 1, 0, 2),(3, 1, 0, 1),
+			(4, 1, 0, 3),(5, 1, 0, 0),(6, 1, 0, 0),
+			(7, 1, 0, 2),(8, 1, 0, 1),(9, 1, 0, 2),
+			(10, 1, 0, 0);");
+		$stmt->execute();
+		$stmt=$dbh->prepare("DELETE FROM `time`"); $stmt->execute();
+		$stmt = $dbh->prepare("INSERT INTO `time` (`id`, `day`) VALUES(0, 0);");
+		$data = $stmt->execute();
+		return response()->json($data);
+	}
+	
 	/**
-	* жили были овечки в загонах
 	* (вытаскиваем из базы через api всех живых овечек)
 	*/
 	public function index(){
 		$data = Lambs::where_alive([])->get();
-		return response()->json($data);
+		return response()->json(['lambs'=>$data, 'time'=>Time::today()]);
 	}
+
 	/**
-	* и у них каждый день рождались новые овечки
-	* и каждый 10 день забирали одну овечку непонятно куда.
-	* (0 день длится 10 секунд.
+	* (1 день длится 10 секунд.
 	* каждый день в одном из загонов где больше 1 овечки появляется ещё одна овечка каждый.
 	* 10 день одну любую овечку забирают(сами знаете куда))
 	*/
@@ -42,15 +58,11 @@ class LambController extends Controller
 		return response()->json($data);
 	}
 
-	/**
-	* И у их хозяина был станок жизьни но оно не работало(видимо создатель заленился).
-	*/
 	public function create(){
 		return response()->json(array('success' => 0));
 	}
 
 	/**
-	* Иногда некоторые самки овечек остовались одни в загоне и к ним пересаживали других самок для спаривания)))).
 	* (если в загоне осталась одна овечка то берём загон где больше всего овечек и пересаживаем одну из них к одинокой овечке)
 	*/
 	public function update(){
@@ -77,8 +89,7 @@ class LambController extends Controller
 	}
 
 	/**
-	* - вот и сказке конец а кто слушал молодец; и забарали одну овечку на обед.
-	* (Где загон не обнулится если убрать овечку).
+	* (Удалить если загон не обнулится если убрать овечку).
 	*/
 	public function destroy($id){
 		$success = 0;
