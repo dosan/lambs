@@ -27,14 +27,16 @@ angular.module('mainCtrl', [])
 				setCangedCorrals(data.lambs);
 			};
 		});
-		timer = $timeout(nextday, 5000);
+		timer = $timeout(nextday, 10000);
 	}
 	var begins = function(){
 		Lamb.get()
 		.success(function(data){
-			setLambs(data);
+			setLambs(data.lambs);
+			console.log(data);
+			$scope.day = data.time;
 		});
-		$timeout(nextday, 5000);
+		$timeout(nextday, 10000);
 	}
 	$scope.deleteLamb = function(id) {
 		Lamb.destroy(id)
@@ -44,12 +46,18 @@ angular.module('mainCtrl', [])
 			};
 		});
 	};
-	$scope.startCounter = function() {
+	$scope.nextDay = function() {
 		nextday();
 	};
 	$scope.stopCounter = function() {
 		$timeout.cancel(timer);
 	};
+	$scope.restartTime = function(){
+		Lamb.init()
+		.success(function(data){
+			window.location.reload();
+		});
+	}
 	$scope.update = function (id, to){
 		Lamb.save({lamb_id: id, to:to}).
 		success(function(data){
